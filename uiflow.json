@@ -1,0 +1,17 @@
+{
+  "device": "M5STACK_PaperS3",
+  "version": "2.0",
+  "author": "M5Stack Developer",
+  "description": "電卓アプリケーション for M5PaperS3",
+  "mainFile": "calculator.py",
+  "bootFile": "boot.py",
+  "dependencies": [],
+  "resources": [],
+  "settings": {
+    "autoPowerOff": false,
+    "wakeupButton": "A",
+    "screenBrightness": 25,
+    "wifiSSID": "",
+    "wifiPassword": ""
+  }
+}
