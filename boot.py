@@ -86,3 +86,21 @@ def initialize():
 # 起動時に初期化を実行
 if __name__ == "__main__":
     initialize()
+
+    # main.pyの実行を確実にする
+    try:
+        print("Importing main application...")
+        import main
+    except Exception as e:
+        print(f"Failed to import main application: {e}")
+        import sys
+
+        sys.print_exception(e)
+
+        # エラーメッセージを画面に表示
+        M5.Lcd.fillScreen(0xFFFFFF)
+        M5.Lcd.setTextColor(0xFF0000, 0xFFFFFF)  # 赤色
+        M5.Lcd.setTextSize(2)
+        M5.Lcd.drawString("Application Error", 10, 10)
+        M5.Lcd.drawString(str(e), 10, 40)
+        M5.Lcd.drawString("Restart device to try again", 10, 100)

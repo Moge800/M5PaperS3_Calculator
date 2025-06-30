@@ -23,6 +23,33 @@ import gc
 # ガベージコレクションを実行（メモリ最適化のため）
 gc.collect()
 
+# カラー定義
+BLACK = 0x000000
+WHITE = 0xFFFFFF
+GRAY = 0xCCCCCC
+LIGHT_GRAY = 0xDDDDDD
+ORANGE = 0xFFA500
+
+# 画面サイズ
+SCREEN_WIDTH = 540
+SCREEN_HEIGHT = 960
+
+# バッテリー消費を抑えるための省電力設定
+AUTO_SLEEP_TIMEOUT = 300000  # 自動スリープまでの時間（ミリ秒）- 5分
+DEFAULT_BRIGHTNESS = 100  # デフォルトの輝度（0-100）
+LOW_POWER_BRIGHTNESS = 30  # 省電力モード時の輝度（0-100）
+SLEEP_BRIGHTNESS = 0  # スリープ時の輝度（0 = オフ）
+SLEEP_CHECK_INTERVAL = 5000  # スリープ状態確認の間隔（ミリ秒）
+DIM_TIMEOUT = 60000  # 輝度を下げるまでの時間（ミリ秒）: 1分
+
+# 省電力制御用の変数
+last_activity_time = time.ticks_ms()  # 最後の操作時間
+is_sleeping = False  # スリープ中かどうか
+power_save_mode = False  # 省電力モードかどうか
+is_paused = False  # 一時停止中かどうか（電源ボタン押下時）
+last_sleep_check = time.ticks_ms()  # 最後にスリープ状態をチェックした時間
+last_power_button_check_time = 0  # 電源ボタンの最後のチェック時間
+
 # 計算機の状態変数
 display_text = "0"  # 画面に表示される文字列
 previous_value = 0  # 前回の計算値
@@ -39,26 +66,26 @@ last_touch_y = -1  # 最後にタッチが開始されたY座標
 last_touch_time = 0  # 最後にタッチが処理された時間
 touch_debounce_time = 500  # タッチのデバウンス時間（ミリ秒）
 
-
-# 画面サイズの定義
-SCREEN_WIDTH = 540
-SCREEN_HEIGHT = 960
-
-# 色の定義
-BLACK = 0x000000
-WHITE = 0xFFFFFF
-GRAY = 0xCCCCCC
-LIGHT_GRAY = 0xEEEEEE
-ORANGE = 0xFF9900
+# 省電力設定はファイル先頭に定義済み
 
 
 # 初期設定
 def setup():
     """初期設定を行う関数"""
-    global is_touch_pressed, last_touch_x, last_touch_y, last_touch_time
+    global is_touch_pressed, last_touch_x, last_touch_y, last_touch_time, last_activity_time
 
     # M5Stackの初期化
     M5.begin()
+
+    # 画面の明るさを設定
+    try:
+        if hasattr(M5, "Lcd") and hasattr(M5.Lcd, "setBrightness"):
+            M5.Lcd.setBrightness(DEFAULT_BRIGHTNESS)
+    except Exception as e:
+        print(f"Failed to set initial brightness: {e}")
+
+    # 最後の操作時間を初期化
+    last_activity_time = time.ticks_ms()
 
     # タッチ関連の変数をリセット
     is_touch_pressed = False
@@ -372,7 +399,7 @@ def button_pressed(key):
 
 def check_touch():
     """タッチ入力をチェックし、指が離れた瞬間にボタン処理を実行する関数"""
-    global is_touch_pressed, last_touch_x, last_touch_y, last_touch_time
+    global is_touch_pressed, last_touch_x, last_touch_y, last_touch_time, last_activity_time, is_sleeping, is_paused
 
     # 現在の時刻を取得
     current_time = time.ticks_ms()
@@ -382,12 +409,25 @@ def check_touch():
         empty_touch_buffer()  # バッファクリアだけ実行
         return
 
-    # デバイス状態を更新（重要: 必ず毎回更新）
-    M5.update()
+    # 注意: M5.update()はloop()で既に実行済み
 
     # タッチ情報を取得
     touch_count = M5.Touch.getCount()
     touch_detected = touch_count > 0
+
+    # スリープ中にタッチがあればスリープ解除
+    if touch_detected and is_sleeping:
+        wake_from_sleep()
+        update_last_activity_time()  # 活動時間を更新
+        return
+
+    # 一時停止画面からの復帰
+    if touch_detected and is_paused:
+        is_paused = False
+        print("Resuming from pause screen due to touch")
+        update_last_activity_time()  # 活動時間を更新
+        redraw_calculator()  # 電卓画面を再描画
+        return
 
     # タッチ状態の変化を検出
     if touch_detected:
@@ -408,6 +448,18 @@ def check_touch():
             last_touch_x = x
             last_touch_y = y
             print(f"Touch start: x={last_touch_x}, y={last_touch_y}")
+
+            # 最後の操作時間を更新
+            update_last_activity_time()
+
+            # 省電力モードから復帰
+            if power_save_mode:
+                power_save_mode = False
+                try:
+                    if hasattr(M5, "Lcd") and hasattr(M5.Lcd, "setBrightness"):
+                        M5.Lcd.setBrightness(DEFAULT_BRIGHTNESS)
+                except Exception as e:
+                    print(f"Failed to restore brightness: {e}")
     else:
         # タッチがない場合で、前回はタッチがあった場合（指が離れた瞬間）
         if is_touch_pressed:
@@ -452,15 +504,223 @@ def empty_touch_buffer():
         pass
 
 
+def update_last_activity_time():
+    """最後の操作時間を更新する関数"""
+    global last_activity_time
+    last_activity_time = time.ticks_ms()
+
+
+def enter_sleep_mode():
+    """スリープモードに入る関数"""
+    global is_sleeping, power_save_mode
+
+    if not is_sleeping:
+        print("Entering sleep mode to save power...")
+        is_sleeping = True
+        power_save_mode = False
+
+        # 画面を暗くする
+        try:
+            if hasattr(M5, "Lcd") and hasattr(M5.Lcd, "setBrightness"):
+                M5.Lcd.setBrightness(SLEEP_BRIGHTNESS)  # 画面をオフ
+        except Exception as e:
+            print(f"Failed to adjust brightness for sleep: {e}")
+
+        # スリープ状態を示す表示
+        M5.Lcd.setTextColor(BLACK, WHITE)
+        M5.Lcd.setTextSize(2)
+        M5.Lcd.fillScreen(WHITE)
+        M5.Lcd.drawString("Touch screen to wake up", SCREEN_WIDTH // 4, SCREEN_HEIGHT // 3)
+
+        # 省電力処理を追加（デバイスによって異なる可能性あり）
+        try:
+            gc.collect()  # メモリ解放
+        except:
+            pass
+
+
+def wake_from_sleep():
+    """スリープモードから復帰する関数"""
+    global is_sleeping, power_save_mode, last_activity_time
+
+    if is_sleeping:
+        print("Waking up from sleep mode...")
+        is_sleeping = False
+        power_save_mode = False
+
+        # 画面明るさを元に戻す
+        try:
+            if hasattr(M5, "Lcd") and hasattr(M5.Lcd, "setBrightness"):
+                M5.Lcd.setBrightness(DEFAULT_BRIGHTNESS)
+        except Exception as e:
+            print(f"Failed to restore brightness: {e}")
+
+        # 画面を再描画
+        M5.Lcd.fillScreen(WHITE)
+        draw_display_area()
+        draw_buttons()
+        update_display()
+
+        # 最後の操作時間を更新
+        update_last_activity_time()
+
+        # タッチバッファをクリア
+        empty_touch_buffer()
+
+
+def enter_power_save_mode():
+    """省電力モードに入る関数（画面輝度を下げる）"""
+    global power_save_mode
+
+    if not is_sleeping and not power_save_mode:
+        print("Entering power save mode (reducing brightness)...")
+        power_save_mode = True
+
+        try:
+            if hasattr(M5, "Lcd") and hasattr(M5.Lcd, "setBrightness"):
+                M5.Lcd.setBrightness(LOW_POWER_BRIGHTNESS)
+        except Exception as e:
+            print(f"Failed to adjust brightness for power save: {e}")
+
+
+def check_power_management():
+    """省電力管理をチェックする関数"""
+    global last_sleep_check
+
+    # 現在の時間を取得
+    current_time = time.ticks_ms()
+
+    # スリープ中はチェックしない
+    if is_sleeping:
+        return
+
+    # 一定間隔でのみチェック（頻繁なチェックを避ける）
+    if time.ticks_diff(current_time, last_sleep_check) < SLEEP_CHECK_INTERVAL:
+        return
+
+    # 最後のチェック時間を更新
+    last_sleep_check = current_time
+
+    # 最後の操作からの経過時間を計算
+    idle_time = time.ticks_diff(current_time, last_activity_time)
+
+    # 自動スリープのタイミングになったらスリープモードへ
+    if idle_time >= AUTO_SLEEP_TIMEOUT:
+        enter_sleep_mode()
+    # 省電力モードのタイミングになったら輝度を下げる
+    elif idle_time >= DIM_TIMEOUT and not power_save_mode:
+        enter_power_save_mode()
+
+
+def check_power_button():
+    """電源ボタンが押されたかどうかをチェックする関数"""
+    # グローバル変数を使用して前回のチェック時間を管理
+    global last_power_button_check_time
+
+    try:
+        # 短時間の連続検出を防止するためのデバウンス処理
+        current_time = time.ticks_ms()
+        if last_power_button_check_time > 0:
+            if time.ticks_diff(current_time, last_power_button_check_time) < 1000:  # 1秒間隔でチェック
+                return False
+
+        # 最終チェック時刻を更新
+        last_power_button_check_time = current_time
+
+        # M5Stack製品によって電源ボタンの検出方法が異なるため、複数の方法を試す
+        button_pressed = False
+
+        # 方法1: BtnPWRクラスを使用（一部のM5Stack製品で利用可能）
+        if hasattr(M5, "BtnPWR") and hasattr(M5.BtnPWR, "isPressed"):
+            button_pressed = M5.BtnPWR.isPressed()
+
+        # 方法2: Axpクラスを使用（電源管理チップを持つ製品で利用可能）
+        elif hasattr(M5, "Axp") and hasattr(M5.Axp, "GetBtnPress"):
+            button_pressed = M5.Axp.GetBtnPress()
+
+        # 方法3: Power.getBtnPress()を使用（一部の製品で利用可能）
+        elif hasattr(M5, "Power") and hasattr(M5.Power, "getBtnPress"):
+            button_pressed = M5.Power.getBtnPress()
+
+        # 電源ボタンが押された場合の処理
+        if button_pressed:
+            print("Power button detected - showing shutdown screen")
+
+            # 2回目の押下を防ぐため、長めの間隔をデバウンスに設定
+            global last_power_button_check_time
+            last_power_button_check_time = current_time + 5000
+
+            # シャットダウン画面を表示
+            show_shutdown_screen()
+            return True
+
+    except Exception as e:
+        print(f"Power button check error: {e}")
+
+    return False
+
+
+# 以前の方法（関数属性を使用）は削除し、グローバル変数を使用
+
+
+def show_shutdown_screen():
+    """一時停止画面を表示する関数"""
+    global is_paused
+
+    print("Power button pressed - Showing pause screen")
+    is_paused = True  # 一時停止状態に設定
+
+    # 画面を白くクリア
+    M5.Lcd.fillScreen(WHITE)
+
+    # 一時停止メッセージを表示
+    M5.Lcd.setTextColor(BLACK, WHITE)
+    M5.Lcd.setTextSize(3)
+    M5.Lcd.drawString("Calculator Paused", SCREEN_WIDTH // 4, SCREEN_HEIGHT // 3)
+    M5.Lcd.setTextSize(2)
+    M5.Lcd.drawString("Application still running", SCREEN_WIDTH // 4, SCREEN_HEIGHT // 2)
+    M5.Lcd.drawString("Touch screen to return", SCREEN_WIDTH // 4, SCREEN_HEIGHT // 2 + 40)
+    M5.Lcd.drawString("Or long-press power button", SCREEN_WIDTH // 4, SCREEN_HEIGHT // 2 + 70)
+    M5.Lcd.drawString("to turn off the device", SCREEN_WIDTH // 4, SCREEN_HEIGHT // 2 + 100)
+
+    # バッテリー情報を表示（利用可能な場合）
+    try:
+        if hasattr(M5, "Power"):
+            bat_level = M5.Power.getBatteryLevel()
+            bat_text = f"Battery: {bat_level}%"
+            M5.Lcd.drawString(bat_text, SCREEN_WIDTH // 4, SCREEN_HEIGHT // 2 + 140)
+    except:
+        pass
+
+    # メモリをクリーンアップ
+    gc.collect()
+
+    # 画面が表示されるまで少し待機
+    time.sleep(1)
+
+    # 制御をメインループに戻す
+
+
 # メインループ
 def loop():
     """メインループ関数"""
     try:
-        # タッチ入力をチェック - デバイス状態の更新はcheck_touch内で行う
-        check_touch()
-
-        # タッチ以外の入力更新
+        # デバイスの状態を更新（ここでまとめて更新）
         M5.update()
+
+        # 省電力管理をチェック
+        check_power_management()
+
+        # スリープ中は最小限の処理のみ行う
+        if is_sleeping:
+            # 電源ボタンとタッチ以外の処理はスキップ
+            check_touch()  # タッチでの復帰を検知するためにタッチチェックは実行
+            time.sleep_ms(500)  # スリープ中は長めの待機でCPU使用を減らす
+            return
+
+        # 通常時の処理
+        # タッチ入力をチェック
+        check_touch()
 
         # メモリ使用状況をモニタリング（10秒に1回程度）
         current_ms = time.ticks_ms()
@@ -477,13 +737,33 @@ def loop():
                 gc.collect()
 
         # 少し長めの遅延を入れることでタッチ検出を安定させる
-        time.sleep_ms(30)
+        time.sleep_ms(100)
 
     except Exception as e:
         print(f"Error occurred: {e}")
         time.sleep_ms(100)
         # エラー回復を試みる
         gc.collect()
+
+
+def redraw_calculator():
+    """電卓画面全体を再描画する関数"""
+    print("Redrawing calculator screen")
+
+    # 画面を白くクリア
+    M5.Lcd.fillScreen(WHITE)
+
+    # 表示エリアを描画
+    draw_display_area()
+
+    # ボタンを描画
+    draw_buttons()
+
+    # 表示を更新
+    update_display()
+
+    # メモリクリーンアップ
+    gc.collect()
 
 
 # プログラム開始
@@ -499,10 +779,21 @@ if __name__ == "__main__":
 
         # メインループ
         error_count = 0
-        last_error_time = 0
+        last_error_time = 0  # 実行継続フラグ
+        running = True
 
-        while True:
+        while running:
             try:
+                # 電源ボタンのチェックを追加（最優先）
+                M5.update()  # 電源ボタンの状態を確実に更新
+
+                # 電源ボタンが押されたら処理
+                if check_power_button():
+                    print("Power button pressed - Pausing application")
+                    # ここで例外は発生させず、単に一時停止画面に遷移
+                    continue
+
+                # 通常のループ処理
                 loop()
                 error_count = 0  # 正常動作中はエラーカウンタをリセット
 
