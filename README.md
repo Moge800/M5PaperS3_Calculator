@@ -22,7 +22,7 @@
 
 1. UIFlow2.0を起動します
 2. M5PaperS3デバイスを接続します
-3. calculator.pyとboot.pyファイルをUIFlow2.0にアップロードします
+3. main.pyとboot.pyファイルをUIFlow2.0にアップロードします
 4. uiflow.jsonを設定ファイルとして使用します
 5. プログラムをM5PaperS3デバイスに転送します
 6. デバイス上で電卓アプリを使用できます
@@ -30,7 +30,7 @@
 ### 直接MicroPythonとして実行する場合
 
 1. M5PaperS3デバイスをUSB接続します
-2. boot.pyとcalculator.pyをデバイスのルートディレクトリにコピーします
+2. boot.pyとmain.pyをデバイスのルートディレクトリにコピーします
 3. デバイスを再起動します
 4. 自動的に電卓アプリが起動します
 

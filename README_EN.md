@@ -22,7 +22,7 @@ This project is provided under the Apache License 2.0. See the `license` file fo
 
 1. Start UIFlow2.0
 2. Connect your M5PaperS3 device
-3. Upload the calculator.py and boot.py files to UIFlow2.0
+3. Upload the main.py and boot.py files to UIFlow2.0
 4. Use uiflow.json as the configuration file
 5. Transfer the program to your M5PaperS3 device
 6. Use the calculator app on the device
@@ -30,7 +30,7 @@ This project is provided under the Apache License 2.0. See the `license` file fo
 ### Running as standalone MicroPython
 
 1. Connect your M5PaperS3 device via USB
-2. Copy boot.py and calculator.py to the device's root directory
+2. Copy boot.py and main.py to the device's root directory
 3. Restart the device
 4. The calculator app will start automatically
 
