@@ -15,7 +15,7 @@ This USAGE document explains how to install and use the M5PaperS3 calculator app
 3. Enter a name for the project, such as "Calculator"
 4. In the project that opens, right-click on the file list on the left and select "Import File"
 5. Upload the following files from this repository:
-   - calculator.py
+   - main.py
    - boot.py
 
 ## Transferring the Program to the Device
@@ -38,7 +38,7 @@ You can edit the code in UIFlow2.0 in two ways:
 ### 2. Python Code Mode
 
 1. Click on the "Python" tab at the top of the screen
-2. The calculator.py code will be displayed
+2. The main.py code will be displayed
 3. Edit the code as needed
 
 ## Customization Tips
