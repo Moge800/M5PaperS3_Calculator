@@ -1,5 +1,9 @@
 # M5PaperS3 電卓アプリ
-
+<p align="center">
+  <img src="IMG_3835.jpg" width="280">
+  <br>
+  <em>M5PaperS3 Calculator – 実機スクリーンショット</em>
+</p>
 このプロジェクトは、M5PaperS3デバイス用の電卓アプリケーションです。UIFlow2.0環境またはMicroPythonとして動作します。
 
 ## ライセンス
