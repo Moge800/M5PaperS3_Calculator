@@ -2,6 +2,12 @@
 
 [English](README.md) | **日本語** &nbsp;·&nbsp; あわせて読む: [使い方ガイド](USAGE_JP.md)
 
+<p align="center">
+  <img src="IMG_3835.jpg" width="280">
+  <br>
+  <em>M5PaperS3 Calculator – 実機スクリーンショット</em>
+</p>
+
 このプロジェクトは、M5PaperS3デバイス用の電卓アプリケーションです。UIFlow2.0環境またはMicroPythonとして動作します。
 
 ## ライセンス

@@ -2,6 +2,12 @@
 
 **English** | [日本語](README_JP.md) &nbsp;·&nbsp; See also: [Usage Guide](USAGE.md)
 
+<p align="center">
+  <img src="IMG_3835.jpg" width="280">
+  <br>
+  <em>M5PaperS3 Calculator running on real hardware</em>
+</p>
+
 This project is a calculator application for the M5PaperS3 device. It can be run either in the UIFlow2.0 environment or as a standalone MicroPython application.
 
 ## License
