@@ -37,7 +37,7 @@ SCREEN_HEIGHT = 960
 # ボタンのフォントサイズ（描画で共有）
 BUTTON_FONT_SIZE = 5
 
-# ponytail: 本機は e-ink（EPD）。バックライトが無いので setBrightness ベースの
+# 本機は e-ink（EPD）。バックライトが無いので setBrightness ベースの
 # 調光・スリープは効かず、スリープ描画はフルリフレッシュで逆に電力を使う。よって省電力層は撤去。
 # 真のスリープが必要なら M5.Power.deepSleep() + タッチGPIO wake を別途実装する。
 
