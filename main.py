@@ -414,14 +414,14 @@ def check_power_button():
     global last_power_button_check_time
 
     try:
-        # 短時間の連続検出を防止するためのデバウンス処理
+        # デバウンス: last_power_button_check_time は「次にチェックを許可する時刻」。
+        # その時刻より前なら何もしない（負意味の混在を避けて一貫させる）。
         current_time = time.ticks_ms()
-        if last_power_button_check_time > 0:
-            if time.ticks_diff(current_time, last_power_button_check_time) < 1000:  # 1秒間隔でチェック
-                return False
+        if time.ticks_diff(current_time, last_power_button_check_time) < 0:
+            return False
 
-        # 最終チェック時刻を更新
-        last_power_button_check_time = current_time
+        # 通常は約1秒間隔でポーリング
+        last_power_button_check_time = time.ticks_add(current_time, 1000)
 
         # M5Stack製品によって電源ボタンの検出方法が異なるため、複数の方法を試す
         button_pressed = False
@@ -442,8 +442,8 @@ def check_power_button():
         if button_pressed:
             print("Power button detected - showing shutdown screen")
 
-            # 2回目の押下を防ぐため、長めの間隔をデバウンスに設定
-            last_power_button_check_time = current_time + 5000
+            # 押下後は5秒ロックして二重トリガを防ぐ（次に許可する時刻 = 今+5000ms）
+            last_power_button_check_time = time.ticks_add(current_time, 5000)
 
             # シャットダウン画面を表示
             show_shutdown_screen()
