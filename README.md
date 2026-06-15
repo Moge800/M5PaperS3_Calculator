@@ -1,44 +1,48 @@
-# M5PaperS3 電卓アプリ
+# M5PaperS3 Calculator App
+
+**English** | [日本語](README_JP.md) &nbsp;·&nbsp; See also: [Usage Guide](USAGE.md)
+
 <p align="center">
   <img src="IMG_3835.jpg" width="280">
   <br>
-  <em>M5PaperS3 Calculator – 実機スクリーンショット</em>
+  <em>M5PaperS3 Calculator running on real hardware</em>
 </p>
-このプロジェクトは、M5PaperS3デバイス用の電卓アプリケーションです。UIFlow2.0環境またはMicroPythonとして動作します。
 
-## ライセンス
+This project is a calculator application for the M5PaperS3 device. It can be run either in the UIFlow2.0 environment or as a standalone MicroPython application.
 
-このプロジェクトは Apache License 2.0 の下で提供されています。詳細は `license` ファイルを参照してください。
+## License
 
-## 機能
+This project is provided under the Apache License 2.0. See the `license` file for details.
 
-- 基本的な四則演算（加算、減算、乗算、除算）
-- 平方根計算
-- 符号反転
-- 小数点対応
-- バックスペース機能
-- クリア機能
-- エラーハンドリング
+## Features
 
-## 使い方
+- Basic arithmetic operations (addition, subtraction, multiplication, division)
+- Square root calculation
+- Sign inversion
+- Decimal point support
+- Backspace function
+- Clear function
+- Error handling
 
-### UIFlow2.0で実行する場合
+## Usage
 
-1. UIFlow2.0を起動します
-2. M5PaperS3デバイスを接続します
-3. main.pyとboot.pyファイルをUIFlow2.0にアップロードします
-4. uiflow.jsonを設定ファイルとして使用します
-5. プログラムをM5PaperS3デバイスに転送します
-6. デバイス上で電卓アプリを使用できます
+### Running with UIFlow2.0
 
-### 直接MicroPythonとして実行する場合
+1. Start UIFlow2.0
+2. Connect your M5PaperS3 device
+3. Upload the main.py and boot.py files to UIFlow2.0
+4. Use uiflow.json as the configuration file
+5. Transfer the program to your M5PaperS3 device
+6. Use the calculator app on the device
 
-1. M5PaperS3デバイスをUSB接続します
-2. boot.pyとmain.pyをデバイスのルートディレクトリにコピーします
-3. デバイスを再起動します
-4. 自動的に電卓アプリが起動します
+### Running as standalone MicroPython
 
-## ボタンレイアウト
+1. Connect your M5PaperS3 device via USB
+2. Copy boot.py and main.py to the device's root directory
+3. Restart the device
+4. The calculator app will start automatically
+
+## Button Layout
 
 ```text
 | 7 | 8 | 9 | / |
@@ -48,44 +52,44 @@
 | C |+/-| < |rt |
 ```
 
-## ボタンの機能
+## Button Functions
 
-- **数字ボタン (0-9)**: 数値入力
-- **演算子 (+, -, *, /)**: 演算の選択
-- **=**: 計算実行
-- **.**: 小数点の入力
-- **C**: すべてクリア
-- **+/-**: 符号反転（正/負の切り替え）
-- **<**: バックスペース（1文字削除）
-- **rt**: 平方根計算
+- **Number buttons (0-9)**: Input values
+- **Operators (+, -, *, /)**: Select operation
+- **=**: Execute calculation
+- **.**: Input decimal point
+- **C**: Clear all
+- **+/-**: Invert sign (toggle positive/negative)
+- **<**: Backspace (delete one character)
+- **rt**: Square root calculation
 
-## 動作環境
+## System Requirements
 
-- UIFlow2.0環境または直接MicroPythonとして実行可能
-- M5PaperS3デバイス専用です
-- 表示できる桁数には制限があります。大きすぎる数値は指数表記になります
+- UIFlow2.0 environment or run directly as MicroPython
+- Specifically for M5PaperS3 device
+- Display has digit limitations. Very large numbers will be shown in scientific notation
 
-## カスタマイズ
+## Customization
 
-コード内の以下の変数を変更することで、見た目や動作をカスタマイズできます：
+You can customize the appearance and behavior by modifying the following variables in the code:
 
-- `button_width`、`button_height`: ボタンのサイズ
-- `button_gap`: ボタン間の隙間
-- `start_x`、`start_y`: キーパッドの開始位置
-- 各ボタンの背景色（`bg_color`）
+- `button_width`, `button_height`: Button size
+- `button_gap`: Space between buttons
+- `start_x`, `start_y`: Starting position of the keypad
+- Background color for each button (`bg_color`)
 
-## トラブルシューティング
+## Troubleshooting
 
-デバイス上でうまく動作しない場合は、以下を確認してください：
+If the app doesn't work properly on your device, check the following:
 
-1. USBシリアルログで詳細なエラー情報を確認する
-2. エラーハンドラが機能しているか確認する
-3. UIFlow2.0の最新バージョンを使用しているか確認する
-4. デバイスのファームウェアが最新かどうか確認する
+1. Check the USB serial log for detailed error information
+2. Verify that the error handler is working
+3. Make sure you're using the latest version of UIFlow2.0
+4. Check if your device's firmware is up to date
 
-## その他の注意事項
+## Additional Notes
 
-- コードはメモリ最適化のためにガベージコレクション（GC）を積極的に活用しています
-- タッチ検出には少しの遅延があります（安定性向上のため）
-- エラーハンドリングが組み込まれており、問題が発生した場合は自動的に回復を試みます
-- 最新のUIFlow MicroPythonドキュメントに基づいて作成されていますが、ドキュメントと実際の実装に差異がある場合があります。その場合は、最新の環境に合わせて調整してください
+- The code actively uses garbage collection (GC) for memory optimization
+- There is a slight delay in touch detection (for improved stability)
+- Error handling is built in, and the system will attempt to recover automatically if problems occur
+- The project is based on the latest UIFlow MicroPython documentation, but there may be differences between the documentation and the actual implementation. In such cases, make adjustments for your current environment
