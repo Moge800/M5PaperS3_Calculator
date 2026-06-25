@@ -27,6 +27,20 @@ This USAGE document explains how to install and use the M5PaperS3 calculator app
 3. Click the "Run" button in the upper right to transfer the program to the device
 4. When the transfer is complete, the calculator app will start automatically
 
+## Uploading without UIFlow2 (flash.bat)
+
+If you would rather not use the UIFlow2 IDE, `flash.bat` (Windows) copies `boot.py` and `main.py`
+to the device over USB using [mpremote](https://docs.micropython.org/en/latest/reference/mpremote.html).
+
+> This is a **file upload, not a firmware flash** — the device must already be running
+> UIFlow2 / MicroPython firmware. Python is required; the script installs `mpremote` automatically if missing.
+
+1. Connect the M5PaperS3 via USB and let it boot normally.
+2. Close UIFlow2 and any serial monitor first — they hold the COM port.
+3. Run `flash.bat` (double-click, or from a terminal). It auto-detects the COM port;
+   if several serial devices are listed, pick the M5PaperS3.
+4. It uploads both files and resets the device, and the calculator starts automatically.
+
 ## Editing in UIFlow2.0
 
 You can edit the code in UIFlow2.0 in two ways:

@@ -42,6 +42,8 @@ This project is provided under the Apache License 2.0. See the `license` file fo
 3. Restart the device
 4. The calculator app will start automatically
 
+On Windows you can automate step 2 with `flash.bat`, which uploads both files over USB via `mpremote` — see the [Usage Guide](USAGE.md#uploading-without-uiflow2-flashbat).
+
 ## Button Layout
 
 ```text
